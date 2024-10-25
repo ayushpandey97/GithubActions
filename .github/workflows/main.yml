@@ -1,0 +1,44 @@
+name: Build and Check Vulnerabilities
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'  # Use the appropriate version for your project
+          distribution: 'adopt'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check-action@v2.3.0
+        with:
+          project: 'YourProjectName'  # Change to your project name
+          fail-on-high: true  # Fail the build if high vulnerabilities are found
+          fail-on-medium: true  # Fail the build if medium vulnerabilities are found
+          output-dir: ./dependency-check-report  # Directory for the reports
+          format: 'ALL'  # Generate all formats (HTML, XML, JSON)
+          
+      - name: Upload Dependency Check Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: dependency-check-report
+          path: ./dependency-check-report  # Path to the report generated
